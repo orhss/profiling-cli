@@ -1,0 +1,30 @@
+[project]
+name = "profiling-cli"
+version = "0.1"
+description = "This is a CLI tool for profiling Python code."
+readme = "README.md"
+authors = [{name = "Or Hasson"}]
+license = "GPL-3.0-or-later"
+requires-python = ">=3.10"
+dependencies = [
+    "click",
+    "line_profiler",
+    "pytest",
+    "httpx",
+    "anthropic",
+    "pytest-memray",
+    "langchain",
+    "langchain-anthropic",
+    "langchain_mcp_adapters",
+    "langchain-community"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+profiling-cli= "profiling_cli.cli:cli"
+
+[project.optional-dependencies]
+test = ["pytest"]
