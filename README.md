@@ -11,6 +11,7 @@ This is a proof-of-concept (POC) project designed to explore the integration of 
 - AI-assisted interpretation of profiling results
 - Automatic test discovery and execution
 - Configuration through environment variables
+- Interactive AI-powered code optimization with GitHub PR creation
 
 ## Installation
 
@@ -59,6 +60,7 @@ profile -c config.env --test-module test_module
 3. The profiling data is collected during test execution
 4. An AI agent analyzes the profiling results and provides insights
 5. Temporary files are cleaned up after execution
+6. When using create-pr during your interactive session with the LLM, you can have the AI automatically create a GitHub pull request with the optimized code discussed
 
 ## Requirements
 
@@ -67,7 +69,7 @@ profile -c config.env --test-module test_module
 - line_profiler
 - Memray
 - Anthropic API access
-- GitHub Personal Access Token (for optional features)
+- GitHub Personal Access Token (for interactive PR creation)
 
 ## Contributing
 
