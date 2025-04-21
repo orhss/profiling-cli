@@ -15,22 +15,18 @@ This is a proof-of-concept (POC) project designed to explore the integration of 
 ## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/orhss/python-profile-cli.git
-cd python-profile-cli
-
-# Install in development mode
-pip install profiling-cli
+pip install git+https://github.com/orhss/profiling-cli.git@v1.0.2#egg=profiling-cli
 ```
 
 ## Configuration
 
-Create a config.env file in your project root with the following variables:
+Create a .env file in your project with the following variables:
 
 ```
 ANTHROPIC_API_KEY=your_anthropic_api_key
 GITHUB_PERSONAL_ACCESS_TOKEN=your_github_token
 ```
+The file path will be passed to the CLI using the --config flag
 
 ## Usage
 

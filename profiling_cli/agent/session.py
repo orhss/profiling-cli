@@ -8,6 +8,7 @@ from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
+from profiling_cli.agent.tools import create_pr_with_optimized_function
 from profiling_cli.utils.plugin_utils import parse_line_profiler_output
 
 
@@ -123,7 +124,8 @@ async def run_agent_session(profiler_stats, memray_stats):
         LINE PROFILER RESULTS: \n {profile_data} \n
         MEMORY PROFILER RESULTS: \n {memray_stats}. \n
         REMINDER: You MUST include a complete optimized version of the function in your response. 
-        Analysis alone is not sufficient."""
+        Analysis alone is not sufficient.
+        Reminder: You must not use your github tools for this analysis"""
         click.echo(first_input)
         response = await agent_executor.ainvoke(
             {"input": first_input}
@@ -135,14 +137,19 @@ async def run_agent_session(profiler_stats, memray_stats):
         click.echo(click.style("End of analysis", fg="bright_blue", italic=True))
 
         while True:
+            print("\n Available commands:")
+            print("1. create-pr - Create a PR with the optimized function")
             user_input = input("\nYou: ")
             if user_input.lower() in ["exit", "quit", "bye"]:
                 print("Chatbot: Goodbye!")
                 break
 
-            response = await agent_executor.ainvoke(
-                {"input": user_input}
-            )
+            elif user_input.lower() in ["create-pr", "createpr", "create pr", "/createpr"]:
+                await create_pr_with_optimized_function(agent_executor)
+            else:
+                response = await agent_executor.ainvoke(
+                    {"input": user_input}
+                )
 
-            # Extract the output message
-            response.get("output", "I couldn't process that.")
+                # Extract the output message
+                response.get("output", "I couldn't process that.")
