@@ -1,6 +1,6 @@
 [project]
 name = "profiling-cli"
-version = "0.1"
+dynamic = ["version"]
 description = "This is a CLI tool for profiling Python code."
 readme = "README.md"
 authors = [{name = "Or Hasson"}]
