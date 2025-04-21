@@ -28,3 +28,5 @@ profiling-cli= "profiling_cli.cli:cli"
 
 [project.optional-dependencies]
 test = ["pytest"]
+
+[tool.setuptools_scm]
