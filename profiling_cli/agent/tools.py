@@ -48,7 +48,7 @@ async def create_pr_with_optimized_function(agent_executor: AgentExecutor) -> No
     
     Follow these exact steps using GitHub tools in order to create the PR:
     1. Use get_file_contents to retrieve the original file
-    2. Use create_branch to make a new branch from main, you must add a random 8 letter code to the branch name.
+    2. Use create_branch to make a new branch from main, you must generated a truly random 8 letter code and add it to the branch name, do not use predetermined sequences.
     3. Use create_or_update_file to commit your optimized function, making sure to:
        - Include the SHA from step 1
        - Maintain the original function name
