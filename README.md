@@ -70,6 +70,7 @@ profile -c config.env --test-module test_module
 - Memray
 - Anthropic API access
 - GitHub Personal Access Token (for interactive PR creation)
+- Docker
 
 ## Contributing
 
