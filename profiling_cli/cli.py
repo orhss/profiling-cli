@@ -9,9 +9,10 @@ import click
 from dotenv import load_dotenv
 
 from profiling_cli.consts import PROFILE_MODULES, PROFILE_FUNCTIONS, PROFILE_OUTPUT_DIR, DEFAULT_OUTPUT_DIR, \
-    LINE_PROFILING_PLUGIN, LINE_PROFILING_PLUGIN_FILE, LINE_STATS_FILE
+    LINE_PROFILING_PLUGIN, LINE_PROFILING_PLUGIN_FILE, LINE_STATS_FILE, ModelProviderConst
 from profiling_cli.agent.session import run_agent_session
-from profiling_cli.utils.cli_utils import display_process_output
+from profiling_cli.utils.agent_utils import initiate_model
+from profiling_cli.utils.cli_utils import display_process_output, get_model_providers_names
 from profiling_cli.utils.path_utils import find_tests_directory, infer_test_module
 
 os.environ[PROFILE_OUTPUT_DIR] = DEFAULT_OUTPUT_DIR
@@ -30,8 +31,15 @@ def cli():
 @click.option('--function', '-f', multiple=True, help='Function to profile (can be used multiple times)')
 @click.option('--test-path', '-tp', help='Path to test directory or file (auto detect)')
 @click.option('--test-module', '-tm', help='Name of the test module (auto detect)')
+@click.option('--model-provider', '-mp', type=click.Choice(get_model_providers_names()),
+              help="Name of the model provider e.g. anthropic", default=ModelProviderConst.ANTHROPIC)
+@click.option('--model-name', '-mn', help='Name of the LLM model e.g. claude-3-5-sonnet-20240620',
+              default='claude-3-5-sonnet-20240620', )
+@click.option('--model-base-url', '-mbu', default=None)
 def profile(config: str, module: tuple[str, ...], function: tuple[str, ...],
-            test_path: str | None = None, test_module: str | None = None) -> None:
+            test_path: str | None = None, test_module: str | None = None,
+            model_name: str = "", model_provider: str | ModelProviderConst = "",
+            model_base_url: str | None = None) -> None:
     """
     Run pytest with line profiling and memory profiling plugins enabled.
 
@@ -44,6 +52,9 @@ def profile(config: str, module: tuple[str, ...], function: tuple[str, ...],
     :param function: Tuple of function names to profile
     :param test_path: Optional path to test directory or file
     :param test_module: Optional name of the test module
+    :param model_name: Optional name of the model e.g. claude-3
+    :param model_provider: Optional name of the model provider e.g. anthropic
+    :param model_base_url: Optional URL of the model provider instance
     :return: None
     """
     # Load the config file
@@ -116,9 +127,10 @@ def profile(config: str, module: tuple[str, ...], function: tuple[str, ...],
         # Send the results to anthropic
         with open(DEFAULT_OUTPUT_DIR + f"/{LINE_STATS_FILE}") as f:
             results_data = f.read()
+        llm = initiate_model(model=model_name, model_provider=model_provider, base_url=model_base_url)
         click.echo(f"\n Lets ask the AI what is going on under the hood..")
 
-        asyncio.run(run_agent_session(profiler_stats=results_data, memray_stats=memray_output))
+        asyncio.run(run_agent_session(profiler_stats=results_data, memray_stats=memray_output, llm=llm))
     except Exception as e:
         click.echo(f"Sorry mate: {e}")
     finally:

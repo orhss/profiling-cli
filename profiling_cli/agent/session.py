@@ -1,12 +1,12 @@
 import os
+from typing import Any
 
 import click
 from langchain.agents import initialize_agent, AgentType
 from langchain.memory import ConversationBufferMemory
-from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.client import MultiServerMCPClient, StdioConnection
 
 from profiling_cli.agent.tools import create_pr_with_optimized_function
 from profiling_cli.utils.plugin_utils import parse_line_profiler_output
@@ -66,28 +66,25 @@ Optimization Details
 ])
 
 
-async def run_agent_session(profiler_stats, memray_stats):
-    # TODO: Support other models
-    # Create the language model
-    llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+async def run_agent_session(profiler_stats: str, memray_stats: str, llm: Any) -> None:
+    """
+    Run the agent session with the provided profiler and memory stats.
+    :param profiler_stats: Profile stats from line_profiler
+    :param memray_stats: Memory stats from memray
+    :param llm: Language model instance
+    :return: None
+    """
 
     # Initialize environment variables
     env = os.environ.copy()
+
     async with MultiServerMCPClient(
             {
-                "github": {
-                    "command": "docker",
-                    "args": [
-                        "run",
-                        "-i",
-                        "--rm",
-                        "-e",
-                        "GITHUB_PERSONAL_ACCESS_TOKEN",
-                        "ghcr.io/github/github-mcp-server"
-                    ],
-                    "transport": "stdio",
-                    "env": env
-                }
+                "github": StdioConnection(command="docker",
+                                          args=["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+                                                "ghcr.io/github/github-mcp-server"],
+                                          transport="stdio",
+                                          env=env)
             }
     ) as client:
         # Create memory

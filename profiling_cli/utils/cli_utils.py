@@ -1,6 +1,8 @@
 from typing import List
 import subprocess
 
+from profiling_cli.consts import ModelProviderConst
+
 
 def display_process_output(process: subprocess.Popen) -> List[str]:
     """
@@ -86,3 +88,8 @@ async def handle_action(action_id, agent_executor, context=None):
     execution_prompt += f"\nPlease proceed with the {action_id} action using this information and the GitHub tools."
 
     return await agent_executor.ainvoke({"input": execution_prompt})
+
+def get_model_providers_names() -> List[str]:
+    """Get all model provider names from ModelProviderConst."""
+    return [value for key, value in ModelProviderConst.__dict__.items()
+            if not key.startswith('__') and isinstance(value, str)]
