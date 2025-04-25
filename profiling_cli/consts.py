@@ -6,3 +6,9 @@ DEFAULT_OUTPUT_DIR = "line_profile_results"
 LINE_PROFILING_PLUGIN =  "line_profiling_plugin"
 LINE_PROFILING_PLUGIN_FILE = "line_profiling_plugin.py"
 LINE_STATS_FILE = "line_stats.txt"
+
+class ModelProviderConst:
+    """Model provider constants."""
+    ANTHROPIC = "anthropic"
+    OPENAI = "openai"
+    OLLAMA = "ollama"

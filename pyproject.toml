@@ -15,8 +15,10 @@ dependencies = [
     "pytest-memray",
     "langchain",
     "langchain-anthropic",
+    "langchain-community",
     "langchain_mcp_adapters",
-    "langchain-community"
+    "langchain_ollama",
+    "langchain-openai"
 ]
 
 [build-system]
