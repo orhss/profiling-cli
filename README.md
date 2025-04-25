@@ -21,13 +21,22 @@ pip install git+https://github.com/orhss/profiling-cli.git@v1.0.2#egg=profiling-
 
 ## Configuration
 
-Create a .env file in your project with the following variables:
+Create a .env file in your project with the appropriate API keys based on your chosen model provider:
 
 ```
+# For Anthropic models (default)
 ANTHROPIC_API_KEY=your_anthropic_api_key
+
+# For OpenAI models
+OPENAI_API_KEY=your_openai_api_key
+
+# For other model providers, add the appropriate API key
+
+# Required for GitHub PR creation feature
 GITHUB_PERSONAL_ACCESS_TOKEN=your_github_token
 ```
-The file path will be passed to the CLI using the --config flag
+
+The API key requirements depend on which model provider you're using with the `-mp` flag. The file path will be passed to the CLI using the `--config` flag.
 
 ## Usage
 
@@ -43,6 +52,12 @@ profile -c config.env --test-path /path/to/tests
 
 # Specify test module
 profile -c config.env --test-module test_module
+
+# Use a specific model provider
+profile -c config.env -mp openai -mn gpt-4
+
+# Use a custom model endpoint
+profile -c config.env -mp anthropic -mn claude-3-5-sonnet-20240620 -mbu https://custom-api-endpoint.com
 ```
 
 ## Options
@@ -52,9 +67,11 @@ profile -c config.env --test-module test_module
 - `--function`, `-f`: Function to profile (can be used multiple times)
 - `--test-path`, `-tp`: Path to test directory or file (auto-detected if not provided)
 - `--test-module`, `-tm`: Name of the test module (auto-detected if not provided)
+- `--model-provider`, `-mp`: Name of the model provider (e.g., anthropic, openai)
+- `--model-name`, `-mn`: Name of the LLM model (e.g., claude-3-5-sonnet-20240620)
+- `--model-base-url`, `-mbu`: Custom base URL for the model API endpoint
 
 ## How It Works
-
 1. The tool copies a pytest plugin to the test directory
 2. It runs pytest with line profiling and memory profiling enabled
 3. The profiling data is collected during test execution
