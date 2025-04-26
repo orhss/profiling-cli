@@ -12,3 +12,9 @@ class ModelProviderConst:
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
     OLLAMA = "ollama"
+
+# Error messages
+class ErrorMessages:
+    """Error messages for various scenarios."""
+    MISSING_ANTHROPIC_KEY = "Please set ANTHROPIC_API_KEY environment variable"
+    MISSING_OPENAI_KEY = "Please set OPENAI_API_KEY environment variable"

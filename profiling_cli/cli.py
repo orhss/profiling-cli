@@ -128,7 +128,7 @@ def profile(config: str, module: tuple[str, ...], function: tuple[str, ...],
         with open(DEFAULT_OUTPUT_DIR + f"/{LINE_STATS_FILE}") as f:
             results_data = f.read()
         llm = initiate_model(model=model_name, model_provider=model_provider, base_url=model_base_url)
-        click.echo(f"\n Lets ask the AI what is going on under the hood..")
+        click.echo("\n Lets ask the AI what is going on under the hood..")
 
         asyncio.run(run_agent_session(profiler_stats=results_data, memray_stats=memray_output, llm=llm))
     except Exception as e:

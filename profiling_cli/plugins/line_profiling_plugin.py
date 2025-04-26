@@ -65,7 +65,7 @@ def pytest_runtest_protocol(item, nextitem):
     line_profiler.enable_by_count()
 
     # Run the test
-    outcome = yield
+    yield
 
     # Disable profiling after test
     line_profiler.disable_by_count()

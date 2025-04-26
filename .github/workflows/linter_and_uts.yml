@@ -1,0 +1,52 @@
+name: Linter and Unit Testing
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  lint_and_uts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Create virtual environment
+        run: python -m venv venv
+
+      - name: Upgrade pip
+        run: |
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
+          source venv/bin/activate
+          pip install .[test]
+        
+      - name: Make linter script executable
+        run: chmod +x ./linter.sh
+
+      - name: Run linter
+        run: |
+          source venv/bin/activate
+          ./linter.sh
+
+      - name: Run tests with coverage
+        run: |
+          source venv/bin/activate
+          pytest tests --durations=5 --durations-min=180.0 --timeout=120 -W ignore::DeprecationWarning --cov=profiling_cli --cov-report=term-missing --cov-fail-under=6
+        env:
+          PYTHONUNBUFFERED: 1
