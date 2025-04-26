@@ -62,7 +62,7 @@ async def create_pr_with_optimized_function(agent_executor: AgentExecutor) -> No
     print("\nReady to create PR with:")
     print(f"- Owner: {owner}")
     print(f"- Repository: {repository}")
-    print(f"- File path: {file_path}")
+    print(f"- File paths: {file_paths}")
     if os.environ.get("CI", "").lower() != "true":
         confirm = input("\nProceed? (y/n): ")
 

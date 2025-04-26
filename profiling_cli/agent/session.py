@@ -74,6 +74,8 @@ async def run_agent_session(profiler_stats: str, memray_stats: str, llm: Any) ->
     :param llm: Language model instance
     :return: None
     """
+    # Check if running in CI environment
+    is_ci = os.environ.get("CI", "false")
 
     # Initialize environment variables
     env = os.environ.copy()
@@ -141,8 +143,11 @@ async def run_agent_session(profiler_stats: str, memray_stats: str, llm: Any) ->
                 print("Chatbot: Goodbye!")
                 break
 
-            elif user_input.lower() in ["create-pr", "createpr", "create pr", "/createpr"]:
+            elif user_input.lower() in ["create-pr", "createpr", "create pr", "/createpr"] or is_ci:
                 await create_pr_with_optimized_function(agent_executor)
+                if is_ci:
+                    print("Chatbot: Goodbye!")
+                    break
             else:
                 response = await agent_executor.ainvoke(
                     {"input": user_input}
