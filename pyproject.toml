@@ -30,7 +30,10 @@ profiling-cli= "profiling_cli.cli:cli"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
     "pytest-mock",
+    "pytest-timeout",
     "ruff"
 ]
 

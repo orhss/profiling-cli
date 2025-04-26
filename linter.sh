@@ -8,7 +8,7 @@ exit_code=$?
 
 if [[ $exit_code -eq 0 ]]
 then
-    printf "Ruff completed successfully. No issues found or all issues were auto-fixed.\n"
+    printf "Ruff completed successfully. No issues found\n"
 elif [[ $exit_code -eq 1 ]]
 then
     printf "Ruff found issues that couldn't be auto-fixed:\n"
