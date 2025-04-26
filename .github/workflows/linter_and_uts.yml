@@ -47,6 +47,6 @@ jobs:
       - name: Run tests with coverage
         run: |
           source venv/bin/activate
-          pytest tests --durations=5 --durations-min=180.0 --timeout=120 -W ignore::DeprecationWarning --cov=profiling-cli --cov-report=term-missing --cov-fail-under=3
+          pytest tests --durations=5 --durations-min=180.0 --timeout=120 -W ignore::DeprecationWarning --cov=profiling_cli --cov-report=term-missing --cov-fail-under=3
         env:
           PYTHONUNBUFFERED: 1
