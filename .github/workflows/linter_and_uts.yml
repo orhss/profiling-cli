@@ -39,31 +39,10 @@ jobs:
       - name: Make linter script executable
         run: chmod +x ./linter.sh
 
-      - name: Run linter and autofix allowed issues
+      - name: Run linter
         run: |
           source venv/bin/activate
           ./linter.sh
-
-      - name: Commit and push linter changes
-        run: |
-          git config --local user.email "action_ruff[bot]@github.com"
-          git config --local user.name "Action ruff[bot]"
-          git add -A
-           if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m ":rotating_light: Auto-fix linting issues"
-            git push origin HEAD:${{ github.head_ref }}
-          fi
-
-      - name: Check if linter made changes
-        id: check_changes
-        run: |
-          if git diff --quiet HEAD^ HEAD; then
-            echo "Linter did not make any changes."
-          else
-            echo "Linter made changes. A commit containing linter fixes was pushed."
-          fi
 
       - name: Run tests with coverage
         run: |
