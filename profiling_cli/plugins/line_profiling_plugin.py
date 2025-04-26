@@ -19,6 +19,7 @@ def find_and_register_functions():
     functions_to_profile = os.environ.get(f'{PROFILE_FUNCTIONS}').split(',') if os.environ.get(
         f'{PROFILE_FUNCTIONS}') else []
     print(f"Modules to profile : {modules_to_profile}")
+    print(f"Functions to profile : {functions_to_profile}")
     for module_name in modules_to_profile:
         try:
             # Import the module

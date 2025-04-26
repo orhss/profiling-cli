@@ -75,8 +75,7 @@ async def run_agent_session(profiler_stats: str, memray_stats: str, llm: Any) ->
     :return: None
     """
     # Check if running in CI environment
-    is_ci = os.environ.get("CI", "false")
-
+    is_ci = True if os.environ.get("CI", "false") == "true" else False
     # Initialize environment variables
     env = os.environ.copy()
 
@@ -135,6 +134,11 @@ async def run_agent_session(profiler_stats: str, memray_stats: str, llm: Any) ->
         click.echo(click.style("\n" + "═" * 80, fg="bright_blue"))
         click.echo(click.style("End of analysis", fg="bright_blue", italic=True))
 
+        if is_ci:
+            await create_pr_with_optimized_function(agent_executor)
+            print("Chatbot: Goodbye!")
+            return
+
         while True:
             print("\n Available commands:")
             print("1. create-pr - Create a PR with the optimized function")
@@ -143,11 +147,8 @@ async def run_agent_session(profiler_stats: str, memray_stats: str, llm: Any) ->
                 print("Chatbot: Goodbye!")
                 break
 
-            elif user_input.lower() in ["create-pr", "createpr", "create pr", "/createpr"] or is_ci:
+            elif user_input.lower() in ["create-pr", "createpr", "create pr", "/createpr"]:
                 await create_pr_with_optimized_function(agent_executor)
-                if is_ci:
-                    print("Chatbot: Goodbye!")
-                    break
             else:
                 response = await agent_executor.ainvoke(
                     {"input": user_input}
