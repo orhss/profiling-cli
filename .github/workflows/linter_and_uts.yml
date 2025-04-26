@@ -35,6 +35,9 @@ jobs:
         run: |
           source venv/bin/activate
           pip install .[test]
+        
+      - name: Make linter script executable
+        run: chmod +x ./linter.sh
 
       - name: Run linter and autofix allowed issues
         run: |
