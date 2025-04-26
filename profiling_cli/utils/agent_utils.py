@@ -27,4 +27,5 @@ def initiate_model(model: str, model_provider: str | ModelProviderConst,
         llm = ChatOpenAI(model=model, verbose=True)
     else:
         raise ValueError(f"Unknown model provider {model_provider}")
+    print(f"Initialized model: {model} with provider {model_provider}")
     return llm
