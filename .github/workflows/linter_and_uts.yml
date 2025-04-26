@@ -1,0 +1,67 @@
+name: Linter and Unit Testing
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  lint_and_uts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Upgrade pip
+        run: |
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
+          source venv/bin/activate
+          pip install .[test]
+
+      - name: Run linter and autofix allowed issues
+        run: |
+          source venv/bin/activate
+          ./linter.sh
+
+      - name: Commit and push linter changes
+        run: |
+          git config --local user.email "action_ruff[bot]@github.com"
+          git config --local user.name "Action ruff[bot]"
+          git add -A
+           if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m ":rotating_light: Auto-fix linting issues"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
+
+      - name: Check if linter made changes
+        id: check_changes
+        run: |
+          if git diff --quiet HEAD^ HEAD; then
+            echo "Linter did not make any changes."
+          else
+            echo "Linter made changes. A commit containing linter fixes was pushed."
+          fi
+
+      - name: Run tests with coverage
+        run: |
+          source venv/bin/activate
+          pytest tests --durations=5 --durations-min=180.0 --timeout=120 -W ignore::DeprecationWarning --cov=profiling-cli --cov-report=term-missing --cov-fail-under=3
+        env:
+          PYTHONUNBUFFERED: 1

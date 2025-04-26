@@ -4,7 +4,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_ollama import OllamaLLM
 from langchain_openai import ChatOpenAI
 
-from profiling_cli.consts import ModelProviderConst
+from profiling_cli.consts import ModelProviderConst, ErrorMessages
 
 
 def initiate_model(model: str, model_provider: str | ModelProviderConst,
@@ -18,12 +18,12 @@ def initiate_model(model: str, model_provider: str | ModelProviderConst,
     """
     # Initialize the language model
     if model_provider == ModelProviderConst.ANTHROPIC:
-        assert os.environ["ANTHROPIC_API_KEY"], "Please set ANTHROPIC_API_KEY environment variable"
+        assert os.environ.get("ANTHROPIC_API_KEY"), ErrorMessages.MISSING_ANTHROPIC_KEY
         llm = ChatAnthropic(model=model, verbose=True)
     elif model_provider == ModelProviderConst.OLLAMA:
         llm = OllamaLLM(base_url=base_url, model=model, verbose=True)
     elif model_provider == ModelProviderConst.OPENAI:
-        assert os.environ["OPENAI_API_KEY"], "Please set OPENAI_API_KEY environment variable"
+        assert os.environ.get("OPENAI_API_KEY"), ErrorMessages.MISSING_OPENAI_KEY
         llm = ChatOpenAI(model=model, verbose=True)
     else:
         raise ValueError(f"Unknown model provider {model_provider}")

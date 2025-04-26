@@ -57,7 +57,7 @@ profile -c config.env --test-module test_module
 profile -c config.env -mp openai -mn gpt-4
 
 # Use a custom model endpoint
-profile -c config.env -mp anthropic -mn claude-3-5-sonnet-20240620 -mbu https://custom-api-endpoint.com
+profile -c config.env -mp ollama -mn mistral -mbu http://localhost:11434
 ```
 
 ## Options
