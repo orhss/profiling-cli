@@ -2,8 +2,8 @@
 # This script runs Ruff for linting and formatting
 
 # Run Ruff to check and fix issues
-echo "Running Ruff to check and fix issues"
-output="$(ruff check . --fix)"
+echo "Running Ruff to check issues"
+output="$(ruff check .)"
 exit_code=$?
 
 if [[ $exit_code -eq 0 ]]
