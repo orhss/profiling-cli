@@ -1,0 +1,191 @@
+name: Reusable Profile PR Changes
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        type: string
+        default: '3.10'
+      file-pattern:
+        description: 'File pattern to match changed files'
+        type: string
+        default: '**/*.py'
+      requirements-file:
+        description: 'Path to requirements file'
+        type: string
+        default: 'requirements.txt'
+      profiling-cli-version:
+        description: 'Version of the profiling-cli to use'
+        type: string
+        default: 'v1.2.6'
+      base-branch:
+        description: 'Base branch to compare against'
+        type: string
+        default: ${{ github.event.pull_request.base.ref }}
+      model-provider:
+        description: 'LLM provider to use (anthropic or openai)'
+        type: string
+        default: 'anthropic'
+      model-name:
+        description: 'Name of the LLM model to use'
+        type: string
+        default: ''
+    secrets:
+      ANTHROPIC_API_KEY:
+        description: 'Anthropic API key for the profiling tool (required if model-provider is anthropic)'
+        required: false
+      OPENAI_API_KEY:
+        description: 'OpenAI API key for the profiling tool (required if model-provider is openai)'
+        required: false
+      PERSONAL_ACCESS_TOKEN_GITHUB:
+        description: 'GitHub Personal Access Token'
+        required: true
+
+jobs:
+  profile-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f "${{ inputs.requirements-file }}" ]; then
+            pip install -r ${{ inputs.requirements-file }}
+          fi
+          pip install git+https://github.com/orhss/profiling-cli.git@${{ inputs.profiling-cli-version }}#egg=profiling-cli
+
+      - name: Find changed Python files
+        id: changed-files
+        run: |
+          # Find files changed in this PR with complete paths relative to repo root
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E '${{ inputs.file-pattern }}' | tr '\n' ',' | sed 's/,$//')
+          
+          # Save to environment variable
+          echo "CHANGED_FILES=${CHANGED_FILES}" >> $GITHUB_ENV
+          echo "Changed files: ${CHANGED_FILES}"
+
+      - name: Extract module names on changed files
+        if: env.CHANGED_FILES != ''
+        run: |
+          # Create module arguments for each changed file
+          MODULE_ARGS=""
+          IFS=',' read -ra FILES <<< "${{ env.CHANGED_FILES }}"
+          for file in "${FILES[@]}"; do
+            # Convert file path to module path (remove extension)
+            MODULE_PATH=$(echo "$file" | sed 's/\.[^.]*$//')
+            
+            # Replace directory separators with dots for Python module format
+            MODULE_PATH=$(echo "$MODULE_PATH" | sed 's/\//./g')
+            
+            MODULE_ARGS="${MODULE_ARGS} -m ${MODULE_PATH}"
+          done
+          
+          echo "MODULE_ARGS=${MODULE_ARGS}" >> $GITHUB_ENV
+          echo "Module arguments: ${MODULE_ARGS}"
+
+      - name: Extract function names containing changes
+        if: env.CHANGED_FILES != ''
+        run: |
+          # Extract function names from changed files
+          FUNCTIONS=()
+          IFS=',' read -ra FILES <<< "${{ env.CHANGED_FILES }}"
+          for file in "${FILES[@]}"; do
+            echo "Processing file: $file"
+            
+            # Get the line numbers that were modified in the diff
+            CHANGED_LINES=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- "$file" | \
+                           grep -E "^@@" | \
+                           sed -E 's/^@@ -([0-9]+)(,[0-9]+)? \+([0-9]+)(,[0-9]+)? @@.*/\3/')
+            
+            if [ -n "$CHANGED_LINES" ]; then
+              echo "Changed start lines: $CHANGED_LINES"
+              
+              # For each changed hunk, find which function it belongs to
+              for start_line in $CHANGED_LINES; do
+                # Find the last function definition before this line
+                FUNC=$(grep -B1000 -n "^ *def " "$file" | \
+                      awk -v line="$start_line" '$1 < line {print $0}' | \
+                      tail -1 | \
+                      sed -E 's/^[0-9]+:[ \t]*def[ \t]+([a-zA-Z0-9_]+)[ \t]*\(.*/\1/')
+                
+                if [ -n "$FUNC" ]; then
+                  echo "Found function for changes starting at line $start_line: $FUNC"
+                  # Check if function is already in array
+                  if [[ ! " ${FUNCTIONS[*]} " =~ " ${FUNC} " ]]; then
+                    FUNCTIONS+=("$FUNC")
+                    echo "Added function: $FUNC"
+                  fi
+                else
+                  echo "No function found for changes starting at line $start_line"
+                fi
+              done
+            fi
+          done
+          
+          # Join array elements with commas
+          FUNCTIONS_LIST=$(IFS=,; echo "${FUNCTIONS[*]}")
+          
+          echo "FUNCTIONS=${FUNCTIONS_LIST}" >> $GITHUB_ENV
+          echo "Extracted functions: ${FUNCTIONS_LIST}"
+
+      - name: Create config file
+        if: env.CHANGED_FILES != ''
+        run: |
+          # Parse owner and repo from GITHUB_REPOSITORY
+          OWNER=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
+          REPO=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)
+          
+          # Create config.env file with necessary environment variables
+          cat > config.env << EOL
+          OPT_FUNC_FILE_PATH='${{ env.CHANGED_FILES }}'
+          OWNER=${OWNER}
+          REPOSITORY=${REPO}
+          OPT_FUNC_REPO_PRIVATE=${{ github.event.repository.private }}
+          BASE_BRANCH=${{ inputs.base-branch }}
+          GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN_GITHUB }}
+          CI="true"
+          EOL
+          
+          # Add the appropriate API key based on the selected model provider
+          if [[ "${{ inputs.model-provider }}" == "openai" ]]; then
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> config.env
+          else
+            echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" >> config.env
+          fi
+          
+          # Set proper permissions
+          chmod 600 config.env
+
+      - name: Run profiler on changed functions
+        if: env.CHANGED_FILES != ''
+        run: |
+          # Create function arguments for each function
+          FUNCTION_ARGS=""
+          IFS=',' read -ra FUNC_ARRAY <<< "${{ env.FUNCTIONS }}"
+          for func in "${FUNC_ARRAY[@]}"; do
+            FUNCTION_ARGS="${FUNCTION_ARGS} --function ${func}"
+          done
+          
+          # Add model provider arguments if specified
+          MODEL_ARGS=""
+          if [[ -n "${{ inputs.model-provider }}" ]]; then
+            MODEL_ARGS="${MODEL_ARGS} --model-provider ${{ inputs.model-provider }}"
+          fi
+          
+          # Add model name arguments if specified
+          if [[ -n "${{ inputs.model-name }}" ]]; then
+            MODEL_ARGS="${MODEL_ARGS} --model-name ${{ inputs.model-name }}"
+          fi
+          
+          # Run the profiler with the function arguments
+          echo "Running command: profiling-cli profile --config ${GITHUB_WORKSPACE}/config.env ${FUNCTION_ARGS} ${MODULE_ARGS} ${MODEL_ARGS}"
+          profiling-cli profile --config ${GITHUB_WORKSPACE}/config.env ${FUNCTION_ARGS} ${MODULE_ARGS} ${MODEL_ARGS}

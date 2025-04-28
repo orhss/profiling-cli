@@ -12,11 +12,12 @@ This is a proof-of-concept (POC) project designed to explore the integration of 
 - Automatic test discovery and execution
 - Configuration through environment variables
 - Interactive AI-powered code optimization with GitHub PR creation
+- GitHub Action workflow for CI/CD integration
 
 ## Installation
 
 ```bash
-pip install git+https://github.com/orhss/profiling-cli.git@v1.0.2#egg=profiling-cli
+pip install git+https://github.com/orhss/profiling-cli.git@v1.2.5#egg=profiling-cli
 ```
 
 ## Configuration
@@ -78,6 +79,78 @@ profile -c config.env -mp ollama -mn mistral -mbu http://localhost:11434
 4. An AI agent analyzes the profiling results and provides insights
 5. Temporary files are cleaned up after execution
 6. When using create-pr during your interactive session with the LLM, you can have the AI automatically create a GitHub pull request with the optimized code discussed
+
+## GitHub Action Integration
+
+This repository also provides a reusable GitHub Action workflow that automatically profiles Python functions changed in pull requests.
+
+### Setting Up the GitHub Action
+
+1. **Create a workflow file** in your repository at `.github/workflows/profile-pr.yml`:
+
+```yaml
+name: Profile Python Changes
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled]
+    branches:
+      - main
+    paths:
+      - '**/*.py'
+
+jobs:
+  call-profile-workflow:
+    # Only run if PR has the "profile" label
+    if: contains(github.event.pull_request.labels.*.name, 'profile')
+    uses: orhss/profiling-cli/.github/workflows/reusable-profile-pr-changes.yml@main
+    with:
+      python-version: '3.10'  # Optional - defaults to '3.10'
+      file-pattern: '**/*.py'  # Optional - defaults to '**/*.py'
+      requirements-file: 'requirements.txt'  # Optional - defaults to 'requirements.txt'
+      profiling-cli-version: 'v1.2.5'  # Optional - defaults to 'v1.2.5'
+      model-provider: 'anthropic'  # Optional - 'anthropic' or 'openai'
+      model-name: 'claude-3-7-sonnet-20250219'  # Optional - specify a model name
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}  # Required when using Anthropic models
+      # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Required when using OpenAI models
+      PERSONAL_ACCESS_TOKEN_GITHUB: ${{ secrets.PERSONAL_ACCESS_TOKEN_GITHUB }}
+```
+
+2. **Set up required secrets** in your repository at Settings > Secrets and variables > Actions:
+   - `ANTHROPIC_API_KEY`: Your Anthropic API key (when using Anthropic models)
+   - `OPENAI_API_KEY`: Your OpenAI API key (when using OpenAI models)
+   - `PERSONAL_ACCESS_TOKEN_GITHUB`: A GitHub PAT with appropriate permissions
+
+3. **Create a "profile" label** in your repository. Pull requests with this label will trigger the profiling workflow.
+
+### Workflow Configuration Options
+
+| Name | Description | Required | Default |
+|------|-------------|----------|---------|
+| `python-version` | Python version to use | No | '3.10' |
+| `file-pattern` | File pattern to match changed files | No | '**/*.py' |
+| `requirements-file` | Path to requirements file | No | 'requirements.txt' |
+| `profiling-cli-version` | Version of the profiling-cli to use | No | 'v1.2.5' |
+| `base-branch` | Base branch to compare against | No | (PR base ref) |
+| `model-provider` | LLM provider to use ('anthropic' or 'openai') | No | 'anthropic' |
+| `model-name` | Name of the LLM model to use | No | '' (uses default for provider) |
+
+### Required Secrets
+
+| Name | Description | Required When |
+|------|-------------|--------------|
+| `ANTHROPIC_API_KEY` | Anthropic API key | Using Anthropic models (model-provider: 'anthropic') |
+| `OPENAI_API_KEY` | OpenAI API key | Using OpenAI models (model-provider: 'openai') |
+| `PERSONAL_ACCESS_TOKEN_GITHUB` | GitHub Personal Access Token | Always required |
+
+### How the Workflow Works
+
+1. Triggered when a pull request with the "profile" label is opened or updated
+2. Identifies which Python files have changed in the PR
+3. Extracts the specific functions that have been modified
+4. Runs the profiling tool on those functions
+5. Results are processed by the profiling-cli tool and added to the PR
 
 ## Requirements
 
