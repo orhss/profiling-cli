@@ -108,7 +108,7 @@ jobs:
       python-version: '3.10'  # Optional - defaults to '3.10'
       file-pattern: '**/*.py'  # Optional - defaults to '**/*.py'
       requirements-file: 'requirements.txt'  # Optional - defaults to 'requirements.txt'
-      profiling-cli-version: 'v1.2.5'  # Optional - defaults to 'v1.2.5'
+      profiling-cli-version: 'v1.2.6'  # Optional - defaults to what is set on the main branch
       model-provider: 'anthropic'  # Optional - 'anthropic' or 'openai'
       model-name: 'claude-3-7-sonnet-20250219'  # Optional - specify a model name
     secrets:
