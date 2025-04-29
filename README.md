@@ -2,7 +2,10 @@
 
 ## Overview
 
-This is a proof-of-concept (POC) project designed to explore the integration of command-line interfaces, Python code profiling, and AI-assisted analysis using Large Language Models (LLMs) and Model Context Protocol (MCP). The code is experimental in nature and intended for learning and exploration rather than production use - it is not meant to be the best code out there, but rather a playground for combining these different technologies.
+This is a proof-of-concept (POC) project designed to explore the integration of command-line interfaces, Python code
+profiling, and AI-assisted analysis using Large Language Models (LLMs) and Model Context Protocol (MCP). The code is
+experimental in nature and intended for learning and exploration rather than production use - it is not meant to be the
+best code out there, but rather a playground for combining these different technologies.
 
 ## Features
 
@@ -37,7 +40,8 @@ OPENAI_API_KEY=your_openai_api_key
 GITHUB_PERSONAL_ACCESS_TOKEN=your_github_token
 ```
 
-The API key requirements depend on which model provider you're using with the `-mp` flag. The file path will be passed to the CLI using the `--config` flag.
+The API key requirements depend on which model provider you're using with the `-mp` flag. The file path will be passed
+to the CLI using the `--config` flag.
 
 ## Usage
 
@@ -73,16 +77,19 @@ profile -c config.env -mp ollama -mn mistral -mbu http://localhost:11434
 - `--model-base-url`, `-mbu`: Custom base URL for the model API endpoint
 
 ## How It Works
+
 1. The tool copies a pytest plugin to the test directory
 2. It runs pytest with line profiling and memory profiling enabled
 3. The profiling data is collected during test execution
 4. An AI agent analyzes the profiling results and provides insights
 5. Temporary files are cleaned up after execution
-6. When using create-pr during your interactive session with the LLM, you can have the AI automatically create a GitHub pull request with the optimized code discussed
+6. When using create-pr during your interactive session with the LLM, you can have the AI automatically create a GitHub
+   pull request with the optimized code discussed
 
 ## GitHub Action Integration
 
-This repository also provides a reusable GitHub Action workflow that automatically profiles Python functions changed in pull requests.
+This repository also provides a reusable GitHub Action workflow that automatically profiles Python functions changed in
+pull requests.
 
 ### Setting Up the GitHub Action
 
@@ -93,7 +100,7 @@ name: Profile Python Changes
 
 on:
   pull_request:
-    types: [opened, synchronize, labeled]
+    types: [ opened, synchronize, labeled ]
     branches:
       - main
     paths:
@@ -108,7 +115,7 @@ jobs:
       python-version: '3.10'  # Optional - defaults to '3.10'
       file-pattern: '**/*.py'  # Optional - defaults to '**/*.py'
       requirements-file: 'requirements.txt'  # Optional - defaults to 'requirements.txt'
-      profiling-cli-version: 'v1.2.5'  # Optional - defaults to 'v1.2.5'
+      profiling-cli-version: 'v1.2.6' # Optional - defaults to what is set on the main branch
       model-provider: 'anthropic'  # Optional - 'anthropic' or 'openai'
       # The default model (claude-3-5-sonnet-20240620) works best with the profiling tool
       # model-name: 'claude-3-5-sonnet-20240620'  # Only specify if you need a different model
@@ -117,34 +124,37 @@ jobs:
       # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Required when using OpenAI models
       PERSONAL_ACCESS_TOKEN_GITHUB: ${{ secrets.PERSONAL_ACCESS_TOKEN_GITHUB }}
 ```
+
 2. **Set up required secrets** in your repository at Settings > Secrets and variables > Actions:
-   - `ANTHROPIC_API_KEY`: Your Anthropic API key (when using Anthropic models)
-   - `OPENAI_API_KEY`: Your OpenAI API key (when using OpenAI models)
-   - `PERSONAL_ACCESS_TOKEN_GITHUB`: A GitHub PAT with appropriate permissions
+    - `ANTHROPIC_API_KEY`: Your Anthropic API key (when using Anthropic models)
+    - `OPENAI_API_KEY`: Your OpenAI API key (when using OpenAI models)
+    - `PERSONAL_ACCESS_TOKEN_GITHUB`: A GitHub PAT with appropriate permissions
 
 3. **Create a "profile" label** in your repository. Pull requests with this label will trigger the profiling workflow.
 
 ### Workflow Configuration Options
 
-| Name | Description                                          | Required | Default |
-|------|------------------------------------------------------|----------|---------|
-| `python-version` | Python version to use                                | No | '3.10' |
-| `file-pattern` | File pattern to match changed files                  | No | '**/*.py' |
-| `requirements-file` | Path to requirements file                            | No | 'requirements.txt' |
-| `profiling-cli-version` | Version of the profiling-cli to use                  | No | 'v1.2.5' |
-| `base-branch` | Base branch to compare against                       | No | (PR base ref) |
-| `model-provider` | LLM provider to use ('anthropic', 'openai', 'ollama') | No | 'anthropic' |
-| `model-name` | Name of the LLM model to use                         | No | '' (uses default for provider) |
+| Name                    | Description                                           | Required | Default                        |
+|-------------------------|-------------------------------------------------------|----------|--------------------------------|
+| `python-version`        | Python version to use                                 | No       | '3.10'                         |
+| `file-pattern`          | File pattern to match changed files                   | No       | '**/*.py'                      |
+| `requirements-file`     | Path to requirements file                             | No       | 'requirements.txt'             |
+| `profiling-cli-version` | Version of the profiling-cli to use                   | No       | 'v1.2.5'                       |
+| `base-branch`           | Base branch to compare against                        | No       | (PR base ref)                  |
+| `model-provider`        | LLM provider to use ('anthropic', 'openai', 'ollama') | No       | 'anthropic'                    |
+| `model-name`            | Name of the LLM model to use                          | No       | '' (uses default for provider) |
 
-> **Note:** The profiling tool is currently optimized for Claude 3.5 Sonnet (`claude-3-5-sonnet-20240620`), which is used by default when no model name is specified. Other models like Claude 3.7 Sonnet may have compatibility issues with the current profiling data format.
+> **Note:** The profiling tool is currently optimized for Claude 3.5 Sonnet (`claude-3-5-sonnet-20240620`), which is
+> used by default when no model name is specified. Other models like Claude 3.7 Sonnet may have compatibility issues with
+> the current profiling data format.
 
 ### Required Secrets
 
-| Name | Description | Required When |
-|------|-------------|--------------|
-| `ANTHROPIC_API_KEY` | Anthropic API key | Using Anthropic models (model-provider: 'anthropic') |
-| `OPENAI_API_KEY` | OpenAI API key | Using OpenAI models (model-provider: 'openai') |
-| `PERSONAL_ACCESS_TOKEN_GITHUB` | GitHub Personal Access Token | Always required |
+| Name                           | Description                  | Required When                                        |
+|--------------------------------|------------------------------|------------------------------------------------------|
+| `ANTHROPIC_API_KEY`            | Anthropic API key            | Using Anthropic models (model-provider: 'anthropic') |
+| `OPENAI_API_KEY`               | OpenAI API key               | Using OpenAI models (model-provider: 'openai')       |
+| `PERSONAL_ACCESS_TOKEN_GITHUB` | GitHub Personal Access Token | Always required                                      |
 
 ### How the Workflow Works
 
@@ -166,7 +176,8 @@ jobs:
 
 ## Contributing
 
-This is an experimental project, but suggestions and improvements are welcome. Please feel free to open issues or submit pull requests.
+This is an experimental project, but suggestions and improvements are welcome. Please feel free to open issues or submit
+pull requests.
 
 ## License
 
