@@ -108,9 +108,10 @@ jobs:
       python-version: '3.10'  # Optional - defaults to '3.10'
       file-pattern: '**/*.py'  # Optional - defaults to '**/*.py'
       requirements-file: 'requirements.txt'  # Optional - defaults to 'requirements.txt'
-      profiling-cli-version: 'v1.2.6'  # Optional - defaults to what is set on the main branch
+      profiling-cli-version: 'v1.2.5'  # Optional - defaults to 'v1.2.5'
       model-provider: 'anthropic'  # Optional - 'anthropic' or 'openai'
-      model-name: 'claude-3-7-sonnet-20250219'  # Optional - specify a model name
+      # The default model (claude-3-5-sonnet-20240620) works best with the profiling tool
+      # model-name: 'claude-3-5-sonnet-20240620'  # Only specify if you need a different model
     secrets:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}  # Required when using Anthropic models
       # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Required when using OpenAI models
@@ -126,15 +127,17 @@ jobs:
 
 ### Workflow Configuration Options
 
-| Name | Description | Required | Default |
-|------|-------------|----------|---------|
-| `python-version` | Python version to use | No | '3.10' |
-| `file-pattern` | File pattern to match changed files | No | '**/*.py' |
-| `requirements-file` | Path to requirements file | No | 'requirements.txt' |
-| `profiling-cli-version` | Version of the profiling-cli to use | No | 'v1.2.5' |
-| `base-branch` | Base branch to compare against | No | (PR base ref) |
-| `model-provider` | LLM provider to use ('anthropic' or 'openai') | No | 'anthropic' |
-| `model-name` | Name of the LLM model to use | No | '' (uses default for provider) |
+| Name | Description                                          | Required | Default |
+|------|------------------------------------------------------|----------|---------|
+| `python-version` | Python version to use                                | No | '3.10' |
+| `file-pattern` | File pattern to match changed files                  | No | '**/*.py' |
+| `requirements-file` | Path to requirements file                            | No | 'requirements.txt' |
+| `profiling-cli-version` | Version of the profiling-cli to use                  | No | 'v1.2.5' |
+| `base-branch` | Base branch to compare against                       | No | (PR base ref) |
+| `model-provider` | LLM provider to use ('anthropic', 'openai', 'ollama') | No | 'anthropic' |
+| `model-name` | Name of the LLM model to use                         | No | '' (uses default for provider) |
+
+> **Note:** The profiling tool is currently optimized for Claude 3.5 Sonnet (`claude-3-5-sonnet-20240620`), which is used by default when no model name is specified. Other models like Claude 3.7 Sonnet may have compatibility issues with the current profiling data format.
 
 ### Required Secrets
 
