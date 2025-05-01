@@ -67,11 +67,16 @@ jobs:
         id: changed-files
         run: |
           # Find files changed in this PR with complete paths relative to repo root
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E '${{ inputs.file-pattern }}' | tr '\n' ',' | sed 's/,$//')
+          # Filter for Python files only and exclude test files
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | 
+                          grep -E '\.py$' | 
+                          grep -v -E '^test_|/test_' | 
+                          tr '\n' ',' | 
+                          sed 's/,$//')
           
           # Save to environment variable
           echo "CHANGED_FILES=${CHANGED_FILES}" >> $GITHUB_ENV
-          echo "Changed files: ${CHANGED_FILES}"
+          echo "Changed Python files (excluding tests): ${CHANGED_FILES}"
 
       - name: Extract module names on changed files
         if: env.CHANGED_FILES != ''
