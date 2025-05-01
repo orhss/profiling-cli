@@ -76,7 +76,7 @@ jobs:
           
           # Save to environment variable
           echo "CHANGED_FILES=${CHANGED_FILES}" >> $GITHUB_ENV
-          echo "Changed Python files (excluding tests): ${CHANGED_FILES}
+          echo "Changed Python files (excluding tests): ${CHANGED_FILES}"
 
       - name: Extract module names on changed files
         if: env.CHANGED_FILES != ''
