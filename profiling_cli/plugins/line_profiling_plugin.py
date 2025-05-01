@@ -26,7 +26,6 @@ def find_and_register_functions():
             module = importlib.import_module(module_name)
 
             # If specific functions are listed, profile only those
-            print(f"Function to profile: {functions_to_profile}")
             if functions_to_profile:
                 for func_name in functions_to_profile:
                     # Check if it's a class method (contains a dot)

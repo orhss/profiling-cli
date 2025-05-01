@@ -74,37 +74,39 @@ async def create_pr_with_optimized_function(agent_executor: AgentExecutor) -> No
 
     # Create the PR using the LLM with GitHub tools
     pr_prompt = f"""
-    Using the optimized functions you've already created (which is in our chat history), please create a pull request with the following requirements:
-    
-    1. The PR should replace the original functions with your optimized version
-    2. Ensure your PR maintains the original function name
-    
-    Pull request details:
-    - Owner: {owner}
-    - Repository: {repository}
-    - Private repository: {is_private}
-    - File paths: {file_paths}
-    - Base branch: {base_branch}
-    
-    Infer any details which are missing.
-    
-    Follow these exact steps using GitHub tools in order to create the PR:
-    1. For each file path in {file_paths}:
-       a. Use get_file_contents to retrieve the original file
-       b. Replace the original function(s) with the optimized version(s)
-       
-    2. Use create_branch to make a new branch from main, you must generate a truly random 8 letter code and add it to the branch name, do not use predetermined sequences.
-    
-    3. For each modified file:
-       a. Use create_or_update_file to commit your optimized function(s), making sure to:
-          - Include the SHA from step 1
-          - Maintain the original function name(s)
-          - Use a descriptive commit message
-    
-    4. Use create_pull_request to open a PR from your new branch to {base_branch}, summarizing all changes
-    
-    Provide the PR URL when complete.
-    """
+Using the optimized functions you've already created (which is in our chat history), please create a pull request with the following requirements:
+
+1. If the original function exists, replace it with your optimized version while maintaining the original function name
+2. If the function doesn't yet exist in the file, add your new function to the appropriate file
+
+Pull request details:
+- Owner: {owner}
+- Repository: {repository}
+- Private repository: {is_private}
+- File paths: {file_paths}
+- Base branch: {base_branch}
+
+Infer any details which are missing.
+
+Follow these exact steps using GitHub tools:
+1. For each file path in {file_paths}:
+   a. Use get_file_contents to retrieve the original file
+   b. Check if the function(s) exists in the file:
+      - If it exists: Replace the original function with the optimized version
+      - If it doesn't exist: Add the new function to an appropriate location in the file
+
+2. Use create_branch to make a new branch from main, you must generate a truly random 8 letter code and add it to the branch name, do not use predetermined sequences.
+
+3. For each modified file:
+   a. Use create_or_update_file to commit your changes, making sure to:
+      - Include the SHA from step 1
+      - Maintain the original function name if replacing an existing function
+      - Use a descriptive commit message that accurately describes the change
+
+4. Use create_pull_request to open a PR from your new branch to {base_branch}, summarizing all changes
+
+Provide the PR URL when complete.
+"""
 
     # Enable GitHub tools for this operation
     await agent_executor.ainvoke({"input": pr_prompt})
