@@ -101,35 +101,83 @@ jobs:
           for file in "${FILES[@]}"; do
             echo "Processing file: $file"
             
-            # Get the line numbers that were modified in the diff
-            CHANGED_LINES=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- "$file" | \
-                           grep -E "^@@" | \
-                           sed -E 's/^@@ -([0-9]+)(,[0-9]+)? \+([0-9]+)(,[0-9]+)? @@.*/\3/')
+            # Get the full diff with context
+            git diff --unified=0 ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- "$file" > temp_diff.txt
             
-            if [ -n "$CHANGED_LINES" ]; then
-              echo "Changed start lines: $CHANGED_LINES"
-              
-              # For each changed hunk, find which function it belongs to
-              for start_line in $CHANGED_LINES; do
-                # Find the last function definition before this line
-                FUNC=$(grep -B1000 -n "^ *def " "$file" | \
-                      awk -v line="$start_line" '$1 < line {print $0}' | \
-                      tail -1 | \
-                      sed -E 's/^[0-9]+:[ \t]*def[ \t]+([a-zA-Z0-9_]+)[ \t]*\(.*/\1/')
-                
-                if [ -n "$FUNC" ]; then
-                  echo "Found function for changes starting at line $start_line: $FUNC"
-                  # Check if function is already in array
-                  if [[ ! " ${FUNCTIONS[*]} " =~ " ${FUNC} " ]]; then
-                    FUNCTIONS+=("$FUNC")
-                    echo "Added function: $FUNC"
-                  fi
-                else
-                  echo "No function found for changes starting at line $start_line"
+            # Extract functions from changes using two approaches
+            
+            # 1. Detect added/modified function definitions directly from the diff
+            ADDED_FUNCS=$(grep -E '^\+[ \t]*def[ \t]+[a-zA-Z0-9_]+[ \t]*\(' temp_diff.txt | 
+                          sed -E 's/^\+[ \t]*def[ \t]+([a-zA-Z0-9_]+)[ \t]*\(.*/\1/')
+            
+            # Add new functions to the array
+            if [ -n "$ADDED_FUNCS" ]; then
+              echo "Directly added/modified functions:"
+              for func in $ADDED_FUNCS; do
+                echo "Found new/modified function: $func"
+                if [[ ! " ${FUNCTIONS[*]} " =~ " ${func} " ]]; then
+                  FUNCTIONS+=("$func")
+                  echo "Added function: $func"
                 fi
               done
             fi
+            
+            # 2. For changes in existing functions, determine which function they belong to
+            # Get the line numbers that were modified in the diff
+            grep -E "^@@" temp_diff.txt | 
+            while read -r hunk_header; do
+              # Extract file line numbers from the hunk header
+              # Format: @@ -old_start,old_count +new_start,new_count @@
+              new_start=$(echo "$hunk_header" | sed -E 's/^@@ -([0-9]+)(,[0-9]+)? \+([0-9]+)(,[0-9]+)? @@.*/\3/')
+              new_count=$(echo "$hunk_header" | sed -E 's/^@@ -([0-9]+)(,[0-9]+)? \+([0-9]+),([0-9]+) @@.*/\4/')
+              
+              # If new_count is not found, default to 1
+              if [ -z "$new_count" ]; then
+                new_count=1
+              fi
+              
+              echo "Examining hunk at line $new_start (span: $new_count)"
+              
+              # Calculate the end line of this hunk
+              end_line=$((new_start + new_count - 1))
+              
+              # Find all function definitions in the file
+              grep -n "^[ \t]*def " "$file" | 
+              while read -r func_line; do
+                func_line_num=$(echo "$func_line" | cut -d: -f1)
+                func_name=$(echo "$func_line" | sed -E 's/^[0-9]+:[ \t]*def[ \t]+([a-zA-Z0-9_]+)[ \t]*\(.*/\1/')
+                
+                # Find the next function definition or EOF
+                next_func_line=$(grep -n "^[ \t]*def " "$file" | awk -v line="$func_line_num" '$1 > line {print $1}' | head -1)
+                if [ -z "$next_func_line" ]; then
+                  # If there's no next function, use end of file
+                  next_func_line=$(wc -l "$file" | awk '{print $1}')
+                fi
+                
+                # Check if the changed hunk overlaps with this function's range
+                if ([ "$new_start" -ge "$func_line_num" ] && [ "$new_start" -lt "$next_func_line" ]) || 
+                   ([ "$end_line" -gt "$func_line_num" ] && [ "$end_line" -le "$next_func_line" ]) || 
+                   ([ "$new_start" -le "$func_line_num" ] && [ "$end_line" -ge "$next_func_line" ]); then
+                  echo "Function '$func_name' contains changes between lines $new_start-$end_line"
+                  if [[ ! " ${FUNCTIONS[*]} " =~ " ${func_name} " ]]; then
+                    FUNCTIONS+=("$func_name")
+                    echo "Added function: $func_name"
+                  fi
+                fi
+              done
+            done
+            
+            # Clean up
+            rm temp_diff.txt
           done
+          
+          # Output the final list of functions
+          if [ ${#FUNCTIONS[@]} -gt 0 ]; then
+            echo "Extracted functions: ${FUNCTIONS[*]}"
+            echo "FUNCTIONS=${FUNCTIONS[*]}" >> $GITHUB_ENV
+          else
+            echo "No functions were extracted"
+          fi
           
           # Join array elements with commas
           FUNCTIONS_LIST=$(IFS=,; echo "${FUNCTIONS[*]}")
