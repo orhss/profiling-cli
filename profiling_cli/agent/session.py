@@ -135,9 +135,13 @@ async def run_agent_session(profiler_stats: str, memray_stats: str, llm: Any) ->
         click.echo(click.style("End of analysis", fg="bright_blue", italic=True))
 
         if is_ci:
-            await create_pr_with_optimized_function(agent_executor)
-            print("Chatbot: Goodbye!")
-            return
+            if function_texts != ['']:
+                await create_pr_with_optimized_function(agent_executor)
+                print("Chatbot: Goodbye!")
+                return
+            else:
+                print("Chatbot: No function to optimize.")
+                return
 
         while True:
             print("\n Available commands:")
