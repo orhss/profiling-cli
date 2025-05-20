@@ -58,7 +58,6 @@ def test_initiate_model_success(mocker, model, provider, base_url, expected_clas
             assert spied_class.call_args[1]["base_url"] == base_url
 
 
-
 @pytest.mark.parametrize(
     "model, provider, error_type, error_msg",
     [

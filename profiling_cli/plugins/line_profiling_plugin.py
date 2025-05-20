@@ -4,7 +4,7 @@ import inspect
 import os
 from line_profiler import LineProfiler
 
-from profiling_cli.consts import LINE_STATS_FILE, PROFILE_MODULES, PROFILE_FUNCTIONS ,PROFILE_OUTPUT_DIR
+from profiling_cli.consts import LINE_STATS_FILE, PROFILE_MODULES, PROFILE_FUNCTIONS, PROFILE_OUTPUT_DIR
 
 # Configuration (will be populated from environment variables or defaults)
 PROFILE_OUTPUT_DIR_LOCATION = os.environ.get(f'{PROFILE_OUTPUT_DIR}')

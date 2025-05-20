@@ -121,7 +121,7 @@ async def run_agent_session(profiler_stats: str, memray_stats: str, llm: Any) ->
         FUNCTIONS: \n {function_texts} \n
         LINE PROFILER RESULTS: \n {profile_data} \n
         MEMORY PROFILER RESULTS: \n {memray_stats}. \n
-        REMINDER: You MUST include a complete optimized version of the function in your response. 
+        REMINDER: You MUST include a complete optimized version of the function in your response.
         Analysis alone is not sufficient.
         Reminder: You must not use your github tools for this analysis"""
         click.echo(first_input)
